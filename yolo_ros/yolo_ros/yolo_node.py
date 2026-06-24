@@ -494,20 +494,22 @@ class YoloNode(LifecycleNode):
         )
         results: Results = results[0].cpu()
 
-        hypothesis = []
-        boxes = []
-        masks = []
-        keypoints = []
-
         if results.boxes or results.obb:
             hypothesis = self.parse_hypothesis(results)
             boxes = self.parse_boxes(results)
+        else:
+            hypothesis = []
+            boxes = []
 
         if results.masks:
             masks = self.parse_masks(results)
+        else:
+            masks = []
 
         if results.keypoints:
             keypoints = self.parse_keypoints(results)
+        else:
+            keypoints = []
 
         # Create detection msgs
         detections_msg = DetectionArray()
