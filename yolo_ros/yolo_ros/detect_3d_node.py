@@ -33,7 +33,7 @@ from tf2_ros.buffer import Buffer
 from tf2_ros import TransformException
 from tf2_ros.transform_listener import TransformListener
 
-from sensor_msgs.msg import CameraInfo, Image
+from sensor_msgs.msg import CameraInfo, Image, CompressedImage
 from geometry_msgs.msg import TransformStamped
 from yolo_msgs.msg import Detection
 from yolo_msgs.msg import DetectionArray
@@ -66,6 +66,7 @@ class Detect3DNode(LifecycleNode):
             "depth_image_reliability", QoSReliabilityPolicy.BEST_EFFORT
         )
         self.declare_parameter("depth_info_reliability", QoSReliabilityPolicy.BEST_EFFORT)
+        self.declare_parameter("use_compressed", False)
 
         # Auxiliary variables
         self.tf_buffer = Buffer()
@@ -115,6 +116,11 @@ class Detect3DNode(LifecycleNode):
             durability=QoSDurabilityPolicy.VOLATILE,
             depth=1,
         )
+        
+        self.use_compressed = (
+            self.get_parameter("use_compressed").get_parameter_value().bool_value
+        )
+        
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # Pubs
@@ -137,9 +143,17 @@ class Detect3DNode(LifecycleNode):
         self.get_logger().info(f"[{self.get_name()}] Activating...")
 
         # Subs
-        self.depth_sub = message_filters.Subscriber(
-            self, Image, "depth_image", qos_profile=self.depth_image_qos_profile
-        )
+        if self.use_compressed:
+            self.depth_sub = message_filters.Subscriber(
+                self, CompressedImage, "depth_image", qos_profile=self.depth_image_qos_profile
+            )
+            self.get_logger().info("Subscribed to compressed depth image topic")
+        else:
+            self.depth_sub = message_filters.Subscriber(
+                self, Image, "depth_image", qos_profile=self.depth_image_qos_profile
+            )
+            self.get_logger().info("Subscribed to uncompressed depth image topic")
+            
         self.depth_info_sub = message_filters.Subscriber(
             self, CameraInfo, "depth_info", qos_profile=self.depth_info_qos_profile
         )
@@ -212,7 +226,7 @@ class Detect3DNode(LifecycleNode):
 
     def on_detections(
         self,
-        depth_msg: Image,
+        depth_msg,
         depth_info_msg: CameraInfo,
         detections_msg: DetectionArray,
     ) -> None:
@@ -220,8 +234,9 @@ class Detect3DNode(LifecycleNode):
         Synchronized callback for depth image, camera info, and detections.
 
         Processes detections to add 3D information and publishes the results.
+        Handles both Image and CompressedImage message types.
 
-        @param depth_msg Depth image message
+        @param depth_msg Depth image message (Image or CompressedImage)
         @param depth_info_msg Camera info message
         @param detections_msg Detections message
         """
@@ -235,7 +250,7 @@ class Detect3DNode(LifecycleNode):
 
     def process_detections(
         self,
-        depth_msg: Image,
+        depth_msg,
         depth_info_msg: CameraInfo,
         detections_msg: DetectionArray,
     ) -> List[Detection]:
@@ -244,8 +259,9 @@ class Detect3DNode(LifecycleNode):
 
         Converts depth image to OpenCV format, looks up TF transform, and converts
         each detection to 3D coordinates in the target frame.
+        Handles both Image and CompressedImage message types.
 
-        @param depth_msg Depth image message
+        @param depth_msg Depth image message (Image or CompressedImage)
         @param depth_info_msg Camera info message
         @param detections_msg Array of 2D detections
         @return List of detections with 3D information added
@@ -261,9 +277,16 @@ class Detect3DNode(LifecycleNode):
             return []
 
         new_detections = []
-        depth_image = self.cv_bridge.imgmsg_to_cv2(
-            depth_msg, desired_encoding="passthrough"
-        )
+        
+        # Handle both Image and CompressedImage
+        if isinstance(depth_msg, CompressedImage):
+            depth_image = self.cv_bridge.compressed_imgmsg_to_cv2(
+                depth_msg, desired_encoding="passthrough"
+            )
+        else:
+            depth_image = self.cv_bridge.imgmsg_to_cv2(
+                depth_msg, desired_encoding="passthrough"
+            )
 
         for detection in detections_msg.detections:
             bbox3d = self.convert_bb_to_3d(depth_image, depth_info_msg, detection)

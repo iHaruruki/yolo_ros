@@ -34,7 +34,7 @@ from ultralytics.engine.results import Masks
 from ultralytics.engine.results import Keypoints
 
 from std_srvs.srv import SetBool
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, CompressedImage
 from yolo_msgs.msg import Point2D
 from yolo_msgs.msg import BoundingBox2D
 from yolo_msgs.msg import Mask
@@ -70,6 +70,7 @@ class YoloNode(LifecycleNode):
         self.declare_parameter("yolo_encoding", "bgr8")
         self.declare_parameter("enable", True)
         self.declare_parameter("image_reliability", QoSReliabilityPolicy.BEST_EFFORT)
+        self.declare_parameter("use_compressed", False)
 
         self.declare_parameter("threshold", 0.5)
         self.declare_parameter("iou", 0.5)
@@ -133,6 +134,9 @@ class YoloNode(LifecycleNode):
         self.reliability = (
             self.get_parameter("image_reliability").get_parameter_value().integer_value
         )
+        self.use_compressed = (
+            self.get_parameter("use_compressed").get_parameter_value().bool_value
+        )
 
         # Detection pub
         self.image_qos_profile = QoSProfile(
@@ -186,9 +190,16 @@ class YoloNode(LifecycleNode):
                 SetClasses, "set_classes", self.set_classes_cb
             )
 
-        self._sub = self.create_subscription(
-            Image, "image_raw", self.image_cb, self.image_qos_profile
-        )
+        if self.use_compressed:
+            self._sub = self.create_subscription(
+                CompressedImage, "image_raw", self.compressed_image_cb, self.image_qos_profile
+            )
+            self.get_logger().info("Subscribed to compressed image topic")
+        else:
+            self._sub = self.create_subscription(
+                Image, "image_raw", self.image_cb, self.image_qos_profile
+            )
+            self.get_logger().info("Subscribed to uncompressed image topic")
 
         super().on_activate(state)
         self.get_logger().info(f"[{self.get_name()}] Activated")
@@ -493,6 +504,28 @@ class YoloNode(LifecycleNode):
 
             del results
             del cv_image
+
+    def compressed_image_cb(self, msg: CompressedImage) -> None:
+        """
+        Compressed image callback for processing detections.
+
+        Receives compressed images, decompresses them, runs YOLO inference,
+        parses results, and publishes detections.
+
+        @param msg CompressedImage message to process
+        """
+        if self.enable:
+            # Decompress and convert image
+            cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(
+                msg, desired_encoding=self.yolo_encoding
+            )
+            
+            # Create a temporary Image message to reuse existing logic
+            image_msg = self.cv_bridge.cv2_to_imgmsg(cv_image, encoding=self.yolo_encoding)
+            image_msg.header = msg.header
+            
+            # Call the regular image callback with the decompressed image
+            self.image_cb(image_msg)
 
     def set_classes_cb(
         self,
