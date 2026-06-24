@@ -229,13 +229,10 @@ class TrackingNode(LifecycleNode):
         # Convert image
         if isinstance(img_msg, CompressedImage):
             cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            # For compressed images, we need to get height and width from the image itself
-            height, width = cv_image.shape[:2]
         else:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            height = img_msg.height
-            width = img_msg.width
             
+        height, width = cv_image.shape[:2]
         cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 
         # Parse detections

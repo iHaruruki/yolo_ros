@@ -445,65 +445,11 @@ class YoloNode(LifecycleNode):
         """
 
         if self.enable:
-
             # Convert image + predict
             cv_image = self.cv_bridge.imgmsg_to_cv2(
                 msg, desired_encoding=self.yolo_encoding
             )
-            results = self.yolo.predict(
-                source=cv_image,
-                verbose=False,
-                stream=False,
-                conf=self.threshold,
-                iou=self.iou,
-                imgsz=(self.imgsz_height, self.imgsz_width),
-                half=self.half,
-                max_det=self.max_det,
-                augment=self.augment,
-                agnostic_nms=self.agnostic_nms,
-                retina_masks=self.retina_masks,
-                device=self.device,
-            )
-            results: Results = results[0].cpu()
-
-            if results.boxes or results.obb:
-                hypothesis = self.parse_hypothesis(results)
-                boxes = self.parse_boxes(results)
-
-            if results.masks:
-                masks = self.parse_masks(results)
-
-            if results.keypoints:
-                keypoints = self.parse_keypoints(results)
-
-            # Create detection msgs
-            detections_msg = DetectionArray()
-
-            for i in range(len(results)):
-
-                aux_msg = Detection()
-
-                if (results.boxes or results.obb) and hypothesis and boxes:
-                    aux_msg.class_id = hypothesis[i]["class_id"]
-                    aux_msg.class_name = hypothesis[i]["class_name"]
-                    aux_msg.score = hypothesis[i]["score"]
-
-                    aux_msg.bbox = boxes[i]
-
-                if results.masks and masks:
-                    aux_msg.mask = masks[i]
-
-                if results.keypoints and keypoints:
-                    aux_msg.keypoints = keypoints[i]
-
-                detections_msg.detections.append(aux_msg)
-
-            # Publish detections
-            detections_msg.header = msg.header
-            self._pub.publish(detections_msg)
-
-            del results
-            del cv_image
+            self._process_detections(cv_image, msg.header)
 
     def compressed_image_cb(self, msg: CompressedImage) -> None:
         """
@@ -515,17 +461,75 @@ class YoloNode(LifecycleNode):
         @param msg CompressedImage message to process
         """
         if self.enable:
-            # Decompress and convert image
+            # Decompress image
             cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(
                 msg, desired_encoding=self.yolo_encoding
             )
-            
-            # Create a temporary Image message to reuse existing logic
-            image_msg = self.cv_bridge.cv2_to_imgmsg(cv_image, encoding=self.yolo_encoding)
-            image_msg.header = msg.header
-            
-            # Call the regular image callback with the decompressed image
-            self.image_cb(image_msg)
+            self._process_detections(cv_image, msg.header)
+
+    def _process_detections(self, cv_image, header) -> None:
+        """
+        Process image detections using YOLO inference.
+
+        Runs YOLO prediction, parses results, and publishes detections.
+
+        @param cv_image OpenCV image array
+        @param header ROS message header to attach to detections
+        """
+        results = self.yolo.predict(
+            source=cv_image,
+            verbose=False,
+            stream=False,
+            conf=self.threshold,
+            iou=self.iou,
+            imgsz=(self.imgsz_height, self.imgsz_width),
+            half=self.half,
+            max_det=self.max_det,
+            augment=self.augment,
+            agnostic_nms=self.agnostic_nms,
+            retina_masks=self.retina_masks,
+            device=self.device,
+        )
+        results: Results = results[0].cpu()
+
+        if results.boxes or results.obb:
+            hypothesis = self.parse_hypothesis(results)
+            boxes = self.parse_boxes(results)
+
+        if results.masks:
+            masks = self.parse_masks(results)
+
+        if results.keypoints:
+            keypoints = self.parse_keypoints(results)
+
+        # Create detection msgs
+        detections_msg = DetectionArray()
+
+        for i in range(len(results)):
+
+            aux_msg = Detection()
+
+            if (results.boxes or results.obb) and hypothesis and boxes:
+                aux_msg.class_id = hypothesis[i]["class_id"]
+                aux_msg.class_name = hypothesis[i]["class_name"]
+                aux_msg.score = hypothesis[i]["score"]
+
+                aux_msg.bbox = boxes[i]
+
+            if results.masks and masks:
+                aux_msg.mask = masks[i]
+
+            if results.keypoints and keypoints:
+                aux_msg.keypoints = keypoints[i]
+
+            detections_msg.detections.append(aux_msg)
+
+        # Publish detections
+        detections_msg.header = header
+        self._pub.publish(detections_msg)
+
+        del results
+        del cv_image
 
     def set_classes_cb(
         self,
