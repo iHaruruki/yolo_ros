@@ -230,6 +230,8 @@ class TrackingNode(LifecycleNode):
         # Convert image
         if isinstance(img_msg, CompressedImage):
             cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
+            cv2.imshow('compressedDepth', cv_image)
+            cv2.waitKey(0)
         else:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
 
