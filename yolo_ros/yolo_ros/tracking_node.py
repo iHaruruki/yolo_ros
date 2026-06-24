@@ -78,7 +78,7 @@ class TrackingNode(LifecycleNode):
         self.image_reliability = (
             self.get_parameter("image_reliability").get_parameter_value().integer_value
         )
-        
+
         self.use_compressed = (
             self.get_parameter("use_compressed").get_parameter_value().bool_value
         )
@@ -120,7 +120,7 @@ class TrackingNode(LifecycleNode):
                 self, Image, "image_raw", qos_profile=image_qos_profile
             )
             self.get_logger().info("Subscribed to uncompressed image topic")
-            
+
         self.detections_sub = message_filters.Subscriber(
             self, DetectionArray, "detections", qos_profile=10
         )
@@ -231,7 +231,7 @@ class TrackingNode(LifecycleNode):
             cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
         else:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            
+
         height, width = cv_image.shape[:2]
         cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB)
 

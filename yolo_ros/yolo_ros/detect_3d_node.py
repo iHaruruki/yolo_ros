@@ -116,11 +116,11 @@ class Detect3DNode(LifecycleNode):
             durability=QoSDurabilityPolicy.VOLATILE,
             depth=1,
         )
-        
+
         self.use_compressed = (
             self.get_parameter("use_compressed").get_parameter_value().bool_value
         )
-        
+
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
         # Pubs
@@ -153,7 +153,7 @@ class Detect3DNode(LifecycleNode):
                 self, Image, "depth_image", qos_profile=self.depth_image_qos_profile
             )
             self.get_logger().info("Subscribed to uncompressed depth image topic")
-            
+
         self.depth_info_sub = message_filters.Subscriber(
             self, CameraInfo, "depth_info", qos_profile=self.depth_info_qos_profile
         )
@@ -277,7 +277,7 @@ class Detect3DNode(LifecycleNode):
             return []
 
         new_detections = []
-        
+
         # Handle both Image and CompressedImage
         if isinstance(depth_msg, CompressedImage):
             depth_image = self.cv_bridge.compressed_imgmsg_to_cv2(

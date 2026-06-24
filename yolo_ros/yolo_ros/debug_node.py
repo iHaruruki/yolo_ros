@@ -85,7 +85,7 @@ class DebugNode(LifecycleNode):
             durability=QoSDurabilityPolicy.VOLATILE,
             depth=1,
         )
-        
+
         self.use_compressed = (
             self.get_parameter("use_compressed").get_parameter_value().bool_value
         )
@@ -122,7 +122,7 @@ class DebugNode(LifecycleNode):
                 self, Image, "image_raw", qos_profile=self.image_qos_profile
             )
             self.get_logger().info("Subscribed to uncompressed image topic")
-            
+
         self.detections_sub = message_filters.Subscriber(
             self, DetectionArray, "detections", qos_profile=10
         )
@@ -451,7 +451,7 @@ class DebugNode(LifecycleNode):
             cv_image = self.cv_bridge.compressed_imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
         else:
             cv_image = self.cv_bridge.imgmsg_to_cv2(img_msg, desired_encoding="bgr8")
-            
+
         bb_marker_array = MarkerArray()
         kp_marker_array = MarkerArray()
 
