@@ -14,8 +14,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from typing import List, Dict
+from typing import List, Dict, Union
 from cv_bridge import CvBridge
+import numpy as np
 
 import rclpy
 from rclpy.qos import QoSProfile
@@ -35,6 +36,7 @@ from ultralytics.engine.results import Keypoints
 
 from std_srvs.srv import SetBool
 from sensor_msgs.msg import Image, CompressedImage
+from std_msgs.msg import Header
 from yolo_msgs.msg import Point2D
 from yolo_msgs.msg import BoundingBox2D
 from yolo_msgs.msg import Mask
@@ -467,7 +469,7 @@ class YoloNode(LifecycleNode):
             )
             self._process_detections(cv_image, msg.header)
 
-    def _process_detections(self, cv_image, header) -> None:
+    def _process_detections(self, cv_image: np.ndarray, header: Header) -> None:
         """
         Process image detections using YOLO inference.
 
@@ -491,6 +493,11 @@ class YoloNode(LifecycleNode):
             device=self.device,
         )
         results: Results = results[0].cpu()
+
+        hypothesis = []
+        boxes = []
+        masks = []
+        keypoints = []
 
         if results.boxes or results.obb:
             hypothesis = self.parse_hypothesis(results)

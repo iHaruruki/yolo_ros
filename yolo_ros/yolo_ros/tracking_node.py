@@ -22,6 +22,7 @@ from rclpy.qos import QoSReliabilityPolicy
 from rclpy.lifecycle import LifecycleNode
 from rclpy.lifecycle import TransitionCallbackReturn
 from rclpy.lifecycle import LifecycleState
+from typing import Union
 
 import cv2
 import numpy as np
@@ -212,7 +213,7 @@ class TrackingNode(LifecycleNode):
         tracker = TRACKER_MAP[cfg.tracker_type](args=cfg, frame_rate=1)
         return tracker
 
-    def detections_cb(self, img_msg, detections_msg: DetectionArray) -> None:
+    def detections_cb(self, img_msg: Union[Image, CompressedImage], detections_msg: DetectionArray) -> None:
         """
         Synchronized callback for image and detections.
 

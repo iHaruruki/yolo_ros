@@ -17,7 +17,7 @@
 import cv2
 import random
 import numpy as np
-from typing import Tuple
+from typing import Tuple, Union
 
 import rclpy
 from rclpy.duration import Duration
@@ -436,7 +436,7 @@ class DebugNode(LifecycleNode):
 
         return marker
 
-    def detections_cb(self, img_msg, detection_msg: DetectionArray) -> None:
+    def detections_cb(self, img_msg: Union[Image, CompressedImage], detection_msg: DetectionArray) -> None:
         """
         Synchronized callback for image and detections.
 

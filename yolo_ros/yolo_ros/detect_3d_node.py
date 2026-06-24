@@ -16,7 +16,7 @@
 
 import cv2
 import numpy as np
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import rclpy
 from rclpy.qos import QoSProfile
@@ -226,7 +226,7 @@ class Detect3DNode(LifecycleNode):
 
     def on_detections(
         self,
-        depth_msg,
+        depth_msg: Union[Image, CompressedImage],
         depth_info_msg: CameraInfo,
         detections_msg: DetectionArray,
     ) -> None:
@@ -250,7 +250,7 @@ class Detect3DNode(LifecycleNode):
 
     def process_detections(
         self,
-        depth_msg,
+        depth_msg: Union[Image, CompressedImage],
         depth_info_msg: CameraInfo,
         detections_msg: DetectionArray,
     ) -> List[Detection]:
