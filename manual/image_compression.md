@@ -1,3 +1,8 @@
+## setup
+```bash
+sudo apt install ros-$ROS_DISTRO-image-transport ros-$ROS_DISTRO-image-transport-plugins ros-$ROS_DISTRO-ffmpeg-encoder-decoder ros-$ROS_DISTRO-ffmpeg-image-transport ros-$ROS_DISTRO-ffmpeg-image-transport-tools
+```
+
 `ros2 run image_transport list_transports`
 ```bash
 Declared transports:
