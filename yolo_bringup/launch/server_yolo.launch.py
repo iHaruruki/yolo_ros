@@ -347,6 +347,22 @@ def generate_launch_description():
             ],
         )
 
+        yolo_rqw_decode_cmd = Node(
+            package="image_transport",
+            executable="republish",
+            name="compressed_depth_repub",
+            namespace=namespace,
+            arguments=['raw', 'compressed'],
+            parameters=[
+                {"in_transport": "raw"},
+                {"out_transport": "compressed"},
+            ],
+            remappings=[
+                ("in", '/yolo/dbg_image'),
+                ("out/compressed", '/yolo/dbg_image/compressed')
+            ],
+        )
+
         return (
             model_type_cmd,
             model_cmd,
@@ -380,6 +396,7 @@ def generate_launch_description():
             debug_node_cmd,
             compressed_color_decode_cmd,
             compressed_depth_decode_cmd,
+            yolo_rqw_decode_cmd,
         )
 
     use_tracking = LaunchConfiguration("use_tracking")
