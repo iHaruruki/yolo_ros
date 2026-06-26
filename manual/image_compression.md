@@ -72,7 +72,7 @@ ros2 run image_transport republish raw ffmpeg --ros-args --remap in:=/camera/col
 
 #### Depth
 ```bash
-ros2 run image_transport republish raw compressedDepth --ros-args --remap in:=/camera/depth/image_raw --remap out/compressedDepth:=/camera/depth/compressed
+ros2 run image_transport republish raw compressedDepth --ros-args --remap in:=/camera/depth/image_raw --remap out/compressedDepth:=/camera/depth/image_raw/compressed -p in_transport:="compressedDepth" -p out_transport:="raw"
 ```
 
 ### decode
@@ -84,4 +84,9 @@ ros2 run image_transport republish compressed raw --ros-args --remap in/compress
 #### Color(H.265[HEVC])
 ```bash
 ros2 run image_transport republish ffmpeg raw --ros-args --remap in/ffmpeg:=/camera/color/ffmpeg --remap out:=/camera/color/unffmpeg
+```
+
+#### Depth
+```bash
+ros2 run image_transport republish ffmpeg raw --ros-args --remap in/compressedDepth:=/camera/depth/image_raw/compressedDepth --remap out:=/camera/depth/image_raw/unzip -p in_transport:="compressedDepth" -p out_transport:="raw"
 ```
