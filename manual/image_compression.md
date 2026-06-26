@@ -78,7 +78,7 @@ ros2 run image_transport republish raw compressedDepth --ros-args --remap in:=/c
 ### decode
 #### Color(libx264)
 ```bash
-ros2 run image_transport republish compressed raw --ros-args --remap in/compressed:=/camera/color/compressed --remap out:=/camera/color/unzipped
+ros2 run image_transport republish compressed raw --ros-args --remap in/compressed:=/camera/color/image_raw/compressed --remap out:=/camera/color/image_raw/unzipped -p in_transport:="compressed" -p out_transport:="raw"
 ```
 
 #### Color(H.265[HEVC])
