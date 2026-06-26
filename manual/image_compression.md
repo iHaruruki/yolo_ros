@@ -67,7 +67,7 @@ ros2 run image_transport republish raw compressed --ros-args --remap in:=/camera
 
 #### Color(H.265[HEVC])
 ```bash
-ros2 run image_transport republish raw ffmpeg --ros-args --remap in:=/camera/color/image_raw --remap out/ffmpeg:=/camera/color/ffmpeg -r __node:=ffmpeg_repub -p out.ffmpeg.encoder:=libx265
+ros2 run image_transport republish raw ffmpeg --ros-args --remap in:=/camera/color/image_raw --remap out/ffmpeg:=/camera/color/image_raw/ffmpeg -p out_transport:="ffmpeg" -p out.ffmpeg.encoder:="libx265" -p out.ffmpeg.gop_size:=30
 ```
 
 #### Depth
