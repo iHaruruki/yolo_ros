@@ -157,7 +157,7 @@ def generate_launch_description():
         input_image_topic = LaunchConfiguration("input_image_topic")
         input_image_topic_cmd = DeclareLaunchArgument(
             "input_image_topic",
-            default_value="/camera/color/image_raw",
+            default_value="/camera/color/image_raw/unzipped",
             description="Name of the input image topic",
         )
 
@@ -172,7 +172,7 @@ def generate_launch_description():
         input_depth_topic = LaunchConfiguration("input_depth_topic")
         input_depth_topic_cmd = DeclareLaunchArgument(
             "input_depth_topic",
-            default_value="/camera/depth/image_raw",
+            default_value="/camera/depth/image_raw/unzipped",
             description="Name of the input depth topic",
         )
 
@@ -315,15 +315,35 @@ def generate_launch_description():
             condition=IfCondition(PythonExpression([use_debug])),
         )
 
-        ffmpeg_decode_cmd = Node(
+        compressed_color_decode_cmd = Node(
             package="image_transport",
             executable="republish",
-            name="ffmpeg_repub",
+            name="compressed_color_repub",
             namespace=namespace,
-            arguments=['ffmpeg', 'raw'],
+            arguments=['compressed', 'raw'],
+            parameters=[
+                {"in_transport": "compressed"},
+                {"out_transport": "raw"},
+            ],
             remappings=[
-                ("in/ffmpeg", '/camera/color/image_raw/ffmpeg'),
-                ("out", '/camera/color/image_raw/unffmpeg')
+                ("in/compressed", '/camera/color/image_raw/compressed'),
+                ("out", '/camera/color/image_raw/unzipped')
+            ],
+        )
+
+        compressed_depth_decode_cmd = Node(
+            package="image_transport",
+            executable="republish",
+            name="compressed_depth_repub",
+            namespace=namespace,
+            arguments=['compressedDepth', 'raw'],
+            parameters=[
+                {"in_transport": "compressedDepth"},
+                {"out_transport": "raw"},
+            ],
+            remappings=[
+                ("in/compressedDepth", '/camera/depth/image_raw/compressedDepth'),
+                ("out", '/camera/depth/image_raw/unzipped')
             ],
         )
 
@@ -358,7 +378,8 @@ def generate_launch_description():
             tracking_node_cmd,
             detect_3d_node_cmd,
             debug_node_cmd,
-            ffmpeg_decode_cmd,
+            compressed_color_decode_cmd,
+            compressed_depth_decode_cmd,
         )
 
     use_tracking = LaunchConfiguration("use_tracking")
