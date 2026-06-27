@@ -52,7 +52,7 @@ def generate_launch_description():
         model = LaunchConfiguration("model")
         model_cmd = DeclareLaunchArgument(
             "model",
-            default_value="yolo26n.pt",
+            default_value="yolo26m.pt",
             description="Model name or path",
         )
 
