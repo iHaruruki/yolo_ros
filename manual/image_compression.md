@@ -62,28 +62,28 @@ Details:
 ### encode
 #### Color(libx264)
 ```bash
-ros2 run image_transport republish raw compressed --ros-args --remap in:=/camera/color/image_raw --remap out/compressed:=/camera/color/compressed
+ros2 run image_transport republish --ros-args --remap in:=/camera/color/image_raw --remap out/compressed:=/camera/color/compressed
 ```
 
 #### Color(H.265[HEVC])
 ```bash
-ros2 run image_transport republish raw ffmpeg --ros-args --remap in:=/camera/color/image_raw --remap out/ffmpeg:=/camera/color/image_raw/ffmpeg -p out_transport:="ffmpeg" -p out.ffmpeg.encoder:="libx265" -p out.ffmpeg.gop_size:=30
+ros2 run image_transport republish --ros-args --remap in:=/camera/color/image_raw --remap out/ffmpeg:=/camera/color/image_raw/ffmpeg -p out_transport:="ffmpeg" -p out.ffmpeg.encoder:="libx265" -p out.ffmpeg.gop_size:=30
 ```
 
 #### Depth
 ```bash
-ros2 run image_transport republish raw compressedDepth --ros-args --remap in:=/camera/depth/image_raw --remap out/compressedDepth:=/camera/depth/image_raw/compressed -p in_transport:="compressedDepth" -p out_transport:="raw"
+ros2 run image_transport republish --ros-args --remap in:=/camera/depth/image_raw --remap out/compressedDepth:=/camera/depth/image_raw/compressed -p in_transport:="compressedDepth" -p out_transport:="raw"
 ```
 
 ### decode
 #### Color(libx264)
 ```bash
-ros2 run image_transport republish compressed raw --ros-args --remap in/compressed:=/camera/color/image_raw/compressed --remap out:=/camera/color/image_raw/unzipped -p in_transport:="compressed" -p out_transport:="raw"
+ros2 run image_transport republish --ros-args --remap in/compressed:=/camera/color/image_raw/compressed --remap out:=/camera/color/image_raw/unzipped -p in_transport:="compressed" -p out_transport:="raw"
 ```
 
 #### Color(H.265[HEVC])
 ```bash
-ros2 run image_transport republish ffmpeg raw --ros-args --remap in/ffmpeg:=/camera/color/ffmpeg --remap out:=/camera/color/unffmpeg
+ros2 run image_transport republish --ros-args --remap in/ffmpeg:=/camera/color/ffmpeg --remap out:=/camera/color/unffmpeg
 ```
 
 #### Depth
