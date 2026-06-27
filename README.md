@@ -255,5 +255,8 @@ Each keypoint is projected in the depth image and visualized using purple sphere
 ```shell
 ros2 launch yolo_bringup yolo.launch.py model:=yolov8m-pose.pt use_3d:=True
 ```
+```bash
+ros2 launch yolo_bringup server_yolo.launch.py model:=yolo26m-pose.pt use_3d:=True
+```
 
 [![](https://drive.google.com/thumbnail?authuser=0&sz=w1280&id=1j4VjCAsOCx_mtM2KFPOLkpJogM0t227r)](https://drive.google.com/file/d/1j4VjCAsOCx_mtM2KFPOLkpJogM0t227r/view?usp=sharing)
