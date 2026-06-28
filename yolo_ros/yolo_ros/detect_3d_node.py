@@ -32,6 +32,7 @@ from cv_bridge import CvBridge
 from tf2_ros.buffer import Buffer
 from tf2_ros import TransformException
 from tf2_ros.transform_listener import TransformListener
+from tf2_ros import TransformBroadcaster
 
 from sensor_msgs.msg import CameraInfo, Image
 from geometry_msgs.msg import TransformStamped
@@ -117,6 +118,8 @@ class Detect3DNode(LifecycleNode):
         )
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
+        self.tf_broadcaster = TransformBroadcaster(self)
+
         # Pubs
         self._pub = self.create_publisher(DetectionArray, "detections_3d", 10)
 
@@ -191,6 +194,9 @@ class Detect3DNode(LifecycleNode):
         self.get_logger().info(f"[{self.get_name()}] Cleaning up...")
 
         del self.tf_listener
+        if hasattr(self, 'tf_broadcaster'):
+            del self.tf_broadcaster
+
         self.destroy_publisher(self._pub)
 
         super().on_cleanup(state)
@@ -232,6 +238,31 @@ class Detect3DNode(LifecycleNode):
             depth_msg, depth_info_msg, detections_msg
         )
         self._pub.publish(new_detections_msg)
+
+        for i, detection in enumerate(new_detections_msg.detections):
+            if hasattr(detection, 'bbox3d') and detection.bbox3d is not None:
+                t = TransformStamped()
+                t.header.stamp = detections_msg.header.stamp
+                t.header.frame_id = self.target_frame
+
+                class_name = getattr(detection, 'class_name', 'object')
+
+                obj_id = getattr(detection, 'id', str(i))
+                if str(obj_id) == '' or str(obj_id) == '0' or str (obj_id) == 'None':
+                    obj_id = str(i)
+
+                t.child_frame_id = f"{class_name}"
+
+                t.transform.translation.x = float(detection.bbox3d.center.position.x)
+                t.transform.translation.y = float(detection.bbox3d.center.position.y)
+                t.transform.translation.z = float(detection.bbox3d.center.position.z)
+
+                t.transform.rotation.x = 0.0
+                t.transform.rotation.y = 0.0
+                t.transform.rotation.z = 0.0
+                t.transform.rotation.w = 1.0
+
+                self.tf_broadcaster.sendTransform(t)
 
     def process_detections(
         self,
