@@ -66,7 +66,7 @@ def generate_launch_description():
         device = LaunchConfiguration("device")
         device_cmd = DeclareLaunchArgument(
             "device",
-            default_value="cuda:0",
+            default_value="cpu",
             description="Device to use (GPU/CPU)",
         )
 
@@ -157,7 +157,7 @@ def generate_launch_description():
         input_image_topic = LaunchConfiguration("input_image_topic")
         input_image_topic_cmd = DeclareLaunchArgument(
             "input_image_topic",
-            default_value="/camera/color/image_raw",
+            default_value="/camera/color/image_raw/compressed",
             description="Name of the input image topic",
         )
 
@@ -172,7 +172,7 @@ def generate_launch_description():
         input_depth_topic = LaunchConfiguration("input_depth_topic")
         input_depth_topic_cmd = DeclareLaunchArgument(
             "input_depth_topic",
-            default_value="/camera/depth/image_raw",
+            default_value="/camera/depth/image_raw/compressedDepth",
             description="Name of the input depth topic",
         )
 
